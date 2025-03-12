@@ -1,9 +1,9 @@
-#\. C:\Base de Datos\dbtaller2.sql
-
+-- Eliminar la base de datos si existe y crearla nuevamente
 DROP DATABASE IF EXISTS dbtaller;
 CREATE DATABASE dbtaller;
 USE dbtaller;
 
+-- Crear tablas principales
 CREATE TABLE lineainv (
     clavein CHAR(10) PRIMARY KEY,  
     nombre VARCHAR(250)           
@@ -35,7 +35,6 @@ CREATE TABLE alumno (
     CONSTRAINT elige FOREIGN KEY (clave) REFERENCES proyecto(clave)
 );
 
-
 CREATE TABLE profesorproy (
     idprofesor INT,                  
     clave CHAR(10),                 
@@ -45,77 +44,39 @@ CREATE TABLE profesorproy (
     CONSTRAINT asigna FOREIGN KEY (clave) REFERENCES proyecto(clave)
 );
 
-CREATE TABLE datos (
-    clave CHAR(10),                 
-    proyecto VARCHAR(250),          
-    linea CHAR(10),                 
-    tipo CHAR(10),                  
-    nocontrol CHAR(10),             
-    nombre_alumno VARCHAR(150),      
-    nombreProf VARCHAR(150),        
-    revisor1 VARCHAR(150),           
-    revisor2 VARCHAR(150)           
+-- Nueva tabla: Perfil
+CREATE TABLE perfil (
+    idperfil INT AUTO_INCREMENT PRIMARY KEY,  
+    nombre VARCHAR(100) NOT NULL
 );
 
--- Crear usuarios
+-- Nueva tabla: Objetos
+CREATE TABLE objetos (
+    idobjeto INT AUTO_INCREMENT PRIMARY KEY,  
+    nombre VARCHAR(100) NOT NULL
+);
+
+-- Nueva tabla: Objeto_Privilegios (relaciona perfil y objetos)
+CREATE TABLE objeto_privilegios (
+    idperfil INT,
+    idobjeto INT,
+    privilegio VARCHAR(100),
+    PRIMARY KEY (idperfil, idobjeto),
+    FOREIGN KEY (idperfil) REFERENCES perfil(idperfil) ON DELETE CASCADE,
+    FOREIGN KEY (idobjeto) REFERENCES objetos(idobjeto) ON DELETE CASCADE
+);
+
+-- Crear usuarios y permisos
 CREATE USER 'alumno'@'localhost' IDENTIFIED BY 'alumno123';
 CREATE USER 'profesor'@'localhost' IDENTIFIED BY 'profesor123';
 CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin123';
 
--- Permisos para alumnos (solo pueden ver y agregar datos de alumnos y proyectos)
 GRANT SELECT, INSERT ON dbtaller.alumno TO 'alumno'@'localhost';
 GRANT SELECT ON dbtaller.proyecto TO 'alumno'@'localhost';
 
--- Permisos para profesores (pueden ver y agregar datos en profesor y profesorproy)
 GRANT SELECT, INSERT ON dbtaller.profesor TO 'profesor'@'localhost';
 GRANT SELECT, INSERT, UPDATE ON dbtaller.profesorproy TO 'profesor'@'localhost';
 
--- Permisos para administrador (todos los privilegios)
 GRANT ALL PRIVILEGES ON dbtaller.* TO 'admin'@'localhost';
 
--- Aplicar cambios
 FLUSH PRIVILEGES;
-
-CREATE TABLE usuarios_permisos (
-    id INT AUTO_INCREMENT PRIMARY KEY,  
-    usuario VARCHAR(50),               
-    permisos TEXT                      
-);
-
-INSERT INTO usuarios_permisos (usuario, permisos) 
-VALUES 
-('alumno', 'SELECT, INSERT en alumno, SELECT en proyecto'),
-('profesor', 'SELECT, INSERT en profesor, SELECT, INSERT, UPDATE en profesorproy'),
-('admin', 'ALL PRIVILEGES en toda la base de datos dbtaller');
-
-
-CREATE TABLE area_conocimiento (
-    idarea INT AUTO_INCREMENT,  
-    nombre_area VARCHAR(150) PRIMARY KEY         
-);
-
-
-
-
-INSERT INTO area_conocimiento (nombre_area) VALUES 
-('Arquitectura de Computadoras'),
-('Ingeniería de Software'),
-('Bases de Datos'),
-('Redes de Computadoras'),
-('Sistemas Operativos'),
-('Inteligencia Artificial');
-
-INSERT INTO rubrica (nombre_rubrica, id_area, descripcion) VALUES 
-('Rúbrica de Arquitectura de Computadoras', 1, 'Rúbrica para evaluar proyectos de arquitectura de computadoras.'),
-('Rúbrica de Ingeniería de Software', 2, 'Rúbrica para evaluar proyectos de ingeniería de software.'),
-('Rúbrica de Bases de Datos', 3, 'Rúbrica para evaluar proyectos de bases de datos.'),
-('Rúbrica de Redes de Computadoras', 4, 'Rúbrica para evaluar proyectos de redes de computadoras.');
-
-INSERT INTO indicador_rubrica (id_rubrica, descripcion, ponderacion) VALUES 
-(1, 'Portada (Obligatoria)', 0),
-(1, 'Protocolo con las observaciones resueltas', 0),
-(1, 'Desarrollo del proyecto', 20),
-(2, 'Marco Teórico Conceptual', 4),
-(2, 'Descripción de Procesos', 9),
-(3, 'Fundamentación del modelo de base de datos', 10),
-(4, 'Definición del problema', 10);
